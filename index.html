@@ -1,1 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desenvolvimento Infantil, Práticas de Criação e Regulação Emocional</title>
+<style>
+  :root{--azul:#1f4e8c;--verde:#2e9e6b;--fundo:#f4f7fb;--texto:#1d2733;--borda:#d5dde8;--erro:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--fundo);color:var(--texto);line-height:1.45}
+  header{background:linear-gradient(135deg,var(--azul),#3b7bc4);color:#fff;padding:28px 18px 22px;text-align:center}
+  header h1{margin:0 0 8px;font-size:clamp(1.25rem,4vw,1.9rem)}
+  header p{margin:0 0 14px;opacity:.93}
+  .lang{display:inline-flex;gap:6px;background:rgba(255,255,255,.18);padding:4px;border-radius:99px}
+  .lang button{border:0;background:transparent;color:#fff;font-weight:700;padding:8px 18px;border-radius:99px;cursor:pointer;font-size:.95rem}
+  .lang button.on{background:#fff;color:var(--azul)}
+  .bar{position:sticky;top:0;height:6px;background:#dfe7f1;z-index:10}
+  .bar i{display:block;height:100%;width:0;background:var(--verde);transition:width .25s}
+  main{max-width:780px;margin:0 auto;padding:18px}
+  .card{background:#fff;border:1px solid var(--borda);border-radius:16px;padding:20px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:1.15rem;color:var(--azul)}
+  .card .sub{margin:0 0 14px;font-size:.88rem;color:#5b6b7e}
+  .aviso{background:#fff8e1;border:1px solid #f0d98a;border-radius:10px;padding:12px;font-size:.88rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  label.t{display:block;font-weight:600;margin-bottom:5px;font-size:.93rem}
+  select{width:100%;padding:11px;border:1px solid var(--borda);border-radius:10px;font-size:1rem;background:#fff}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;margin-top:12px}
+  .check input{margin-top:4px;width:18px;height:18px}
+  .legenda{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .legenda span{background:#eef3fa;border-radius:8px;padding:5px 9px;font-size:.78rem}
+  .legenda b{color:var(--azul)}
+  .item{padding:14px 0;border-top:1px solid #edf1f6}
+  .item.falta{background:#fdecea;border-radius:10px;padding:14px 10px}
+  .item p{margin:0 0 10px;font-size:.96rem}
+  .item p b{color:var(--azul);margin-right:4px}
+  .op{display:grid;gap:6px}
+  .op label{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px solid var(--borda);border-radius:12px;padding:9px 3px;cursor:pointer;text-align:center;min-height:58px;font-size:.68rem;color:#5b6b7e;background:#fff}
+  .op label strong{font-size:1.15rem;color:var(--texto)}
+  .op input{position:absolute;opacity:0;pointer-events:none}
+  .op label:has(input:checked){border-color:var(--verde);background:#e6f4ee;color:#1d6b49}
+  .op label:has(input:checked) strong{color:#1d6b49}
+  .enviar{width:100%;padding:16px;background:var(--verde);color:#fff;border:0;border-radius:12px;font-size:1.08rem;font-weight:700;cursor:pointer}
+  .enviar:disabled{opacity:.55;cursor:default}
+  #msg{margin-top:14px;padding:14px;border-radius:10px;display:none;text-align:center;font-weight:600}
+  #msg.erro{display:block;background:#fdeaea;color:var(--erro)}
+  #fim{display:none;text-align:center;padding:40px 20px}
+  #fim h2{font-size:1.5rem}
+  footer{text-align:center;font-size:.8rem;color:#6b7a8c;padding:20px}
+  .hp{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
 
+<header>
+  <h1 id="h-titulo"></h1>
+  <p id="h-sub"></p>
+  <div class="lang">
+    <button type="button" id="b-pt" class="on">🇧🇷 Português</button>
+    <button type="button" id="b-es">🇪🇸 Español</button>
+  </div>
+</header>
+<div class="bar"><i id="prog"></i></div>
+
+<main id="app">
+  <div class="card">
+    <h2 id="t-tcle"></h2>
+    <div class="aviso" id="tx-tcle"></div>
+    <label class="check"><input type="checkbox" id="aceite"><span id="tx-aceite"></span></label>
+  </div>
+
+  <form id="form" novalidate autocomplete="off">
+    <input type="text" id="bot" class="hp" tabindex="-1" autocomplete="off">
+
+    <div class="card">
+      <h2 id="t-dados"></h2>
+      <p class="sub" id="s-dados"></p>
+      <div class="grid" id="dados"></div>
+    </div>
+
+    <div class="card" id="c-ep"></div>
+    <div class="card" id="c-pp"></div>
+    <div class="card" id="c-re"></div>
+
+    <button class="enviar" type="submit" id="enviar"></button>
+    <div id="msg"></div>
+  </form>
+
+  <div class="card" id="fim"></div>
+</main>
+
+<footer id="rodape"></footer>
+
+<script>
+/* ============ CONFIG ============ */
+// ⚠️ TROQUE SÓ O TEXTO ENTRE ASPAS pela URL do Apps Script (termina em /exec)
+const URL_PLANILHA = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
+
+/* ============ TEXTOS DA INTERFACE ============ */
+const UI = {
+  pt:{
+    titulo:"Desenvolvimento Infantil, Práticas de Criação e Regulação Emocional",
+    sub:"Estudo científico voltado para crianças de 5 a 7 anos.",
+    tcle:"Termo de Consentimento",
+    tx_tcle:"Você está sendo convidado(a) a participar, de forma voluntária, de uma pesquisa científica sobre desenvolvimento infantil, práticas de criação e regulação emocional de crianças de 5 a 7 anos. A participação leva cerca de 10 minutos. <b>Não pedimos nome nem qualquer dado que identifique você ou a criança.</b> As respostas serão usadas somente para fins científicos e tratadas de forma agregada, conforme a LGPD. Não há respostas certas ou erradas. Você pode desistir a qualquer momento, fechando esta página, sem qualquer prejuízo.",
+    aceite:"Li e concordo em participar voluntariamente. Declaro ser pai, mãe ou responsável legal de uma criança de 5 a 7 anos e autorizo as respostas sobre ela.",
+    dados:"Dados gerais", s_dados:"Todos os campos são obrigatórios. Nenhum deles identifica você.",
+    enviar:"Enviar respostas", enviando:"Enviando...",
+    falta:"Faltam respostas. Os itens em vermelho precisam ser respondidos.",
+    faltaAceite:"Marque o termo de consentimento para continuar.",
+    erroRede:"Não foi possível enviar. Verifique a internet e tente novamente.",
+    erroUrl:"⚠️ Formulário ainda não conectado à planilha (URL_PLANILHA). Avise o pesquisador.",
+    fimT:"✅ Obrigado por participar!", fimP:"Suas respostas foram enviadas. Você já pode fechar esta página.",
+    rodape:"Pesquisa conduzida com ética e sigilo • Digital Chevalier Card",
+    selecione:"Selecione..."
+  },
+  es:{
+    titulo:"Desarrollo Infantil, Prácticas de Crianza y Regulación Emocional",
+    sub:"Estudio científico dirigido a niños y niñas de 5 a 7 años.",
+    tcle:"Consentimiento Informado",
+    tx_tcle:"Usted está invitado(a) a participar, de forma voluntaria, en una investigación científica sobre desarrollo infantil, prácticas de crianza y regulación emocional de niños y niñas de 5 a 7 años. La participación dura unos 10 minutos. <b>No pedimos nombre ni ningún dato que lo identifique a usted o al niño(a).</b> Las respuestas se usarán únicamente con fines científicos y se tratarán de forma agregada. No hay respuestas correctas ni incorrectas. Puede retirarse en cualquier momento cerrando esta página, sin ningún perjuicio.",
+    aceite:"He leído y acepto participar voluntariamente. Declaro ser padre, madre o tutor legal de un niño(a) de 5 a 7 años y autorizo las respuestas sobre él/ella.",
+    dados:"Datos generales", s_dados:"Todos los campos son obligatorios. Ninguno lo identifica a usted.",
+    enviar:"Enviar respuestas", enviando:"Enviando...",
+    falta:"Faltan respuestas. Los ítems en rojo deben ser respondidos.",
+    faltaAceite:"Marque el consentimiento informado para continuar.",
+    erroRede:"No fue posible enviar. Verifique su internet e inténtelo de nuevo.",
+    erroUrl:"⚠️ El formulario aún no está conectado a la planilla (URL_PLANILHA). Avise al investigador.",
+    fimT:"✅ ¡Gracias por participar!", fimP:"Sus respuestas fueron enviadas. Ya puede cerrar esta página.",
+    rodape:"Investigación realizada con ética y confidencialidad • Digital Chevalier Card",
+    selecione:"Seleccione..."
+  }
+};
+
+/* ============ DADOS GERAIS (valor salvo sempre em português) ============ */
+const CAMPOS = [
+  {k:"papel", pt:"Você é", es:"Usted es", op:[["Mãe","Madre"],["Pai","Padre"],["Outro responsável","Otro tutor"]]},
+  {k:"faixa", pt:"Sua faixa etária", es:"Su rango de edad", op:[["18–24","18–24"],["25–34","25–34"],["35–44","35–44"],["45–54","45–54"],["55 ou mais","55 o más"]]},
+  {k:"escolaridade", pt:"Sua escolaridade", es:"Su nivel de estudios", op:[["Fundamental incompleto","Primaria incompleta"],["Fundamental completo","Primaria completa"],["Médio completo","Secundaria completa"],["Superior incompleto","Superior incompleto"],["Superior completo","Superior completo"],["Pós-graduação","Posgrado"]]},
+  {k:"pais", pt:"País onde você mora", es:"País donde vive", op:[["Brasil","Brasil"],["Argentina","Argentina"],["Chile","Chile"],["Colômbia","Colombia"],["México","México"],["Paraguai","Paraguay"],["Peru","Perú"],["Uruguai","Uruguay"],["Outro","Otro"]]},
+  {k:"idadeCrianca", pt:"Idade da criança", es:"Edad del niño(a)", op:[["5 anos","5 años"],["6 anos","6 años"],["7 anos","7 años"]]},
+  {k:"sexoCrianca", pt:"Sexo da criança", es:"Sexo del niño(a)", op:[["Feminino","Femenino"],["Masculino","Masculino"],["Prefiro não informar","Prefiero no informar"]]}
+];
+
+/* ============ ESCALAS ============ */
+const ESC = {
+ ep:{
+  id:"c-ep",
+  pt:{t:"Parte 1 – Estresse parental", s:"Pensando na sua experiência como pai/mãe, indique o quanto você concorda com cada frase."},
+  es:{t:"Parte 1 – Estrés parental", s:"Pensando en su experiencia como padre/madre, indique cuánto está de acuerdo con cada frase."},
+  lab:{pt:["Discordo totalmente","Discordo","Indeciso / Neutro","Concordo","Concordo totalmente"],
+       es:["Totalmente en desacuerdo","En desacuerdo","Indeciso / Neutral","De acuerdo","Totalmente de acuerdo"]},
+  curto:{pt:["Discordo totalmente","Discordo","Neutro","Concordo","Concordo totalmente"],
+         es:["Totalm. en desacuerdo","En desacuerdo","Neutral","De acuerdo","Totalm. de acuerdo"]},
+  it:[
+   ["Eu estou feliz no meu papel como pai/mãe","Estoy feliz en mi papel como padre/madre"],
+   ["Cuidar do meu filho às vezes leva mais tempo e energia do que eu tenho para dar","Cuidar de mi hijo a veces requiere más tiempo y energía de los que tengo para dar"],
+   ["Eu sinto uma proximidade com meu(s) filho(s)","Siento cercanía con mi(s) hijo(s)"],
+   ["O nascimento de meu(s) filho(s) me deu mais certezas e rumo na vida","El nacimiento de mi(s) hijo(s) me dio más certezas y rumbo en la vida"],
+   ["Meu(s) filho(s) é(são) uma fonte importante de afeto para mim","Mi(s) hijo(s) es (son) una fuente importante de afecto para mí"],
+   ["Eu acho satisfatório gastar tempo com meu(s) filho(s)","Me resulta satisfactorio pasar tiempo con mi(s) hijo(s)"],
+   ["Minha vida é controlada pelas necessidades do(s) meu(s) filho(s)","Mi vida está controlada por las necesidades de mi(s) hijo(s)"],
+   ["Eu acho difícil equilibrar as responsabilidades com meu(s) filho(s) e as outras responsabilidades na minha vida","Me resulta difícil equilibrar las responsabilidades con mi(s) hijo(s) y las demás responsabilidades de mi vida"],
+   ["Sinto-me sobrecarregado(a) pelas responsabilidades de ser pai/mãe","Me siento sobrecargado(a) por las responsabilidades de ser padre/madre"],
+   ["Se eu pudesse fazer tudo de novo, eu não teria filhos","Si pudiera hacerlo todo de nuevo, no tendría hijos"],
+   ["Ter filho(s) me traz felicidade","Tener hijo(s) me trae felicidad"],
+   ["É difícil para mim conciliar a maternidade/paternidade com meus outros papéis e atividades","Me resulta difícil conciliar la maternidad/paternidad con mis otros roles y actividades"],
+   ["Cuidar do(s) meu(s) filho(s) consome a maior parte do meu tempo livre","Cuidar de mi(s) hijo(s) consume la mayor parte de mi tiempo libre"],
+   ["Sinto-me estressado(a) por causa das demandas do(s) meu(s) filho(s)","Me siento estresado(a) por las demandas de mi(s) hijo(s)"],
+   ["Eu me sinto realizado(a) como pai/mãe","Me siento realizado(a) como padre/madre"],
+   ["Desfruto de meu(s) filho(s)","Disfruto de mi(s) hijo(s)"]
+  ]},
+ pp:{
+  id:"c-pp",
+  pt:{t:"Parte 2 – Práticas de criação", s:"Com que frequência você faz o que está descrito em cada frase com o seu filho(a)?"},
+  es:{t:"Parte 2 – Prácticas de crianza", s:"¿Con qué frecuencia hace usted lo que describe cada frase con su hijo(a)?"},
+  lab:{pt:["Nunca","Raramente","Às vezes","Frequentemente","Sempre"],es:["Nunca","Rara vez","A veces","Frecuentemente","Siempre"]},
+  it:[
+   ["Incentivo o meu filho quando ele está triste","Animo a mi hijo cuando está triste"],
+   ["Explico as razões das regras que estabeleço para o meu filho","Explico las razones de las reglas que establezco para mi hijo"],
+   ["Encorajo o meu filho a falar sobre os seus sentimentos","Animo a mi hijo a hablar sobre sus sentimientos"],
+   ["Demonstro simpatia e compreensão quando o meu filho está com problemas ou frustrado","Demuestro simpatía y comprensión cuando mi hijo tiene problemas o está frustrado"],
+   ["Ajudo o meu filho a entender as consequências das suas ações","Ayudo a mi hijo a entender las consecuencias de sus acciones"],
+   ["Respeito a opinião do meu filho, mesmo que não concorde com ela","Respeto la opinión de mi hijo, aunque no esté de acuerdo con ella"],
+   ["Demonstro afeto verbalmente (ex: digo que o amo)","Demuestro afecto verbalmente (ej.: le digo que lo amo)"],
+   ["Converso com o meu filho sobre o que se espera dele","Converso con mi hijo sobre lo que se espera de él"],
+   ["Dou oportunidade para o meu filho tomar decisões por si mesmo","Doy oportunidad a mi hijo de tomar decisiones por sí mismo"],
+   ["Elogio o meu filho quando ele se comporta bem","Elogio a mi hijo cuando se comporta bien"],
+   ["Explico ao meu filho como me sinto quando ele se comporta bem ou mal","Le explico a mi hijo cómo me siento cuando se comporta bien o mal"],
+   ["Escuto com atenção o que o meu filho tem a dizer","Escucho con atención lo que mi hijo tiene que decir"],
+   ["Tenho momentos calorosos e especiais com o meu filho","Tengo momentos cálidos y especiales con mi hijo"],
+   ["Levo em consideração as preferências do meu filho antes de pedir para fazer algo","Tomo en cuenta las preferencias de mi hijo antes de pedirle que haga algo"],
+   ["Permito que o meu filho participe nas decisões da família","Permito que mi hijo participe en las decisiones de la familia"],
+   ["Bato no meu filho quando ele desobedece","Le pego a mi hijo cuando desobedece"],
+   ["Grito com o meu filho quando ele faz algo errado","Le grito a mi hijo cuando hace algo mal"],
+   ["Mando o meu filho para o quarto ou para um canto como castigo","Mando a mi hijo a su cuarto o a un rincón como castigo"]
+  ]},
+ re:{
+  id:"c-re",
+  pt:{t:"Parte 3 – Regulação emocional da criança", s:"Pensando em como a criança costuma se comportar, indique a frequência de cada situação."},
+  es:{t:"Parte 3 – Regulación emocional del niño(a)", s:"Pensando en cómo suele comportarse el niño(a), indique la frecuencia de cada situación."},
+  lab:{pt:["Nunca","Algumas vezes","Muitas vezes","Quase sempre"],es:["Nunca","Algunas veces","Muchas veces","Casi siempre"]},
+  it:[
+   ["É uma criança alegre","Es un niño(a) alegre"],
+   ["Apresenta grande variação de humor (o estado emocional da criança é difícil de ser previsto, pois ela muda rapidamente de bem humorada para mal humorada)","Presenta gran variación de humor (el estado emocional del niño es difícil de predecir, pues cambia rápidamente de buen humor a mal humor)"],
+   ["Responde de forma positiva a iniciativas de adultos de se aproximar de forma neutra ou amigável","Responde de forma positiva a las iniciativas de adultos de acercarse de forma neutra o amistosa"],
+   ["Troca bem de uma atividade para outra (não fica ansiosa, irritada, angustiada ou excessivamente empolgada quando passa de uma atividade para outra)","Cambia bien de una actividad a otra (no se pone ansioso, irritado, angustiado ni excesivamente exaltado al pasar de una actividad a otra)"],
+   ["Recupera-se rapidamente de episódios de aborrecimento ou angústia (por exemplo, não permanece quieta ou mal humorada, ansiosa ou triste após eventos emocionalmente estressantes)","Se recupera rápidamente de episodios de fastidio o angustia (por ejemplo, no permanece callado ni de mal humor, ansioso o triste después de eventos emocionalmente estresantes)"],
+   ["Frustra-se facilmente","Se frustra fácilmente"],
+   ["Responde de forma positiva a iniciativas de seus pares de se aproximar de forma neutra ou amigável (pares são crianças da mesma idade ou colegas)","Responde de forma positiva a las iniciativas de sus pares de acercarse de forma neutra o amistosa (los pares son niños de la misma edad o compañeros)"],
+   ["É propensa a explosões de raiva / birra","Es propenso(a) a explosiones de rabia / berrinches"],
+   ["É capaz de adiar gratificação (por exemplo, suporta a espera por uma recompensa)","Es capaz de postergar la gratificación (por ejemplo, tolera la espera por una recompensa)"],
+   ["Sente prazer com o sofrimento dos outros (por exemplo, ri quando outra pessoa se machuca ou é punida; gosta de provocar os outros)","Siente placer con el sufrimiento de los demás (por ejemplo, se ríe cuando otra persona se lastima o es castigada; le gusta provocar a otros)"],
+   ["Consegue controlar a empolgação em situações emocionalmente estimulantes (por exemplo, não se empolga excessivamente em situações de brincadeiras de alta energia, ou não fica muito agitada em contextos inapropriados)","Logra controlar la exaltación en situaciones emocionalmente estimulantes (por ejemplo, no se exalta excesivamente en juegos de alta energía, ni se agita demasiado en contextos inapropiados)"]
+  ]}
+};
+
+/* ============ ESTADO ============ */
+let lang = "pt";
+const resp = {};               // ex: resp.ep_3 = "4"; resp.papel = "Mãe"
+const $ = id => document.getElementById(id);
+
+function render(){
+  const u = UI[lang];
+  document.documentElement.lang = lang==="pt" ? "pt-BR" : "es";
+  document.title = u.titulo;
+  $("h-titulo").textContent = u.titulo; $("h-sub").textContent = u.sub;
+  $("t-tcle").textContent = u.tcle; $("tx-tcle").innerHTML = u.tx_tcle; $("tx-aceite").textContent = u.aceite;
+  $("t-dados").textContent = u.dados; $("s-dados").textContent = u.s_dados;
+  $("enviar").textContent = u.enviar; $("rodape").textContent = u.rodape;
+  $("b-pt").classList.toggle("on", lang==="pt"); $("b-es").classList.toggle("on", lang==="es");
+
+  // dados gerais
+  $("dados").innerHTML = "";
+  CAMPOS.forEach(c=>{
+    const d = document.createElement("div");
+    const opts = c.op.map(o=>`<option value="${o[0]}"${resp[c.k]===o[0]?" selected":""}>${lang==="pt"?o[0]:o[1]}</option>`).join("");
+    d.innerHTML = `<label class="t" for="f-${c.k}">${c[lang]}</label><select id="f-${c.k}" data-k="${c.k}"><option value="">${u.selecione}</option>${opts}</select>`;
+    $("dados").appendChild(d);
+  });
+  document.querySelectorAll("#dados select").forEach(s=>s.addEventListener("change",()=>{resp[s.dataset.k]=s.value;s.closest("div").classList.remove("falta");progresso();}));
+
+  // escalas
+  Object.keys(ESC).forEach(key=>{
+    const e = ESC[key], n = e.lab.pt.length;
+    const rotulos = (e.curto||e.lab)[lang];
+    let h = `<h2>${e[lang].t}</h2><p class="sub">${e[lang].s}</p>`;
+    h += `<div class="legenda">${e.lab[lang].map((x,i)=>`<span><b>${i+1}</b> = ${x}</span>`).join("")}</div>`;
+    e.it.forEach((it,i)=>{
+      const name = `${key}_${i+1}`;
+      h += `<div class="item" id="i-${name}"><p><b>${i+1}.</b>${it[lang==="pt"?0:1]}</p><div class="op" style="grid-template-columns:repeat(${n},1fr)">`;
+      for(let v=1; v<=n; v++){
+        h += `<label><input type="radio" name="${name}" value="${v}"${resp[name]==v?" checked":""}><strong>${v}</strong><span>${rotulos[v-1]}</span></label>`;
+      }
+      h += `</div></div>`;
+    });
+    $(e.id).innerHTML = h;
+  });
+  document.querySelectorAll('.op input').forEach(r=>r.addEventListener("change",()=>{
+    resp[r.name]=r.value; $("i-"+r.name).classList.remove("falta"); progresso();
+  }));
+  progresso();
+}
+
+function total(){
+  return CAMPOS.length + Object.values(ESC).reduce((a,e)=>a+e.it.length,0);
+}
+function progresso(){
+  let ok = CAMPOS.filter(c=>resp[c.k]).length;
+  Object.keys(ESC).forEach(k=>ESC[k].it.forEach((_,i)=>{ if(resp[`${k}_${i+1}`]) ok++; }));
+  $("prog").style.width = Math.round(ok/total()*100) + "%";
+}
+
+$("b-pt").onclick = ()=>{lang="pt";render();};
+$("b-es").onclick = ()=>{lang="es";render();};
+
+/* ============ ENVIO ============ */
+$("form").addEventListener("submit", async ev=>{
+  ev.preventDefault();
+  const u = UI[lang], msg = $("msg");
+  msg.className = ""; msg.style.display = "none";
+  if($("bot").value) return;                       // anti-robô
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(URL_PLANILHA)){
+    msg.className = "erro"; msg.textContent = u.erroUrl; return;
+  }
+  if(!$("aceite").checked){ msg.className="erro"; msg.textContent=u.faltaAceite; $("aceite").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+
+  // validação
+  let primeiro = null;
+  CAMPOS.forEach(c=>{ if(!resp[c.k]){ const el=$("f-"+c.k).closest("div"); el.classList.add("falta"); primeiro = primeiro||el; } });
+  Object.keys(ESC).forEach(k=>ESC[k].it.forEach((_,i)=>{
+    if(!resp[`${k}_${i+1}`]){ const el=$(`i-${k}_${i+1}`); el.classList.add("falta"); primeiro = primeiro||el; }
+  }));
+  if(primeiro){ msg.className="erro"; msg.textContent=u.falta; primeiro.scrollIntoView({behavior:"smooth",block:"center"}); return; }
+
+  const arr = k => ESC[k].it.map((_,i)=>Number(resp[`${k}_${i+1}`]));
+  const dados = {
+    idioma: lang==="pt" ? "Português" : "Español",
+    papel: resp.papel, faixa: resp.faixa, escolaridade: resp.escolaridade, pais: resp.pais,
+    idadeCrianca: resp.idadeCrianca, sexoCrianca: resp.sexoCrianca,
+    ep: arr("ep"), pp: arr("pp"), re: arr("re")
+  };
+
+  const btn = $("enviar"); btn.disabled = true; btn.textContent = u.enviando;
+  try{
+    await fetch(URL_PLANILHA, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(dados)
+    });
+    $("form").style.display = "none";
+    document.querySelector(".card").style.display = "none";
+    $("fim").style.display = "block";
+    $("fim").innerHTML = `<h2>${u.fimT}</h2><p>${u.fimP}</p>`;
+    $("prog").style.width = "100%";
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(err){
+    msg.className = "erro"; msg.textContent = u.erroRede;
+    btn.disabled = false; btn.textContent = u.enviar;
+  }
+});
+
+render();
+</script>
+</body>
+</html>
