@@ -93,7 +93,7 @@
 
 <script>
 /* ============ CONFIG ============ */
-// ⚠️ COLE AQUI a URL do Apps Script (Implantar > App da Web)
+// ⚠️ TROQUE SÓ O TEXTO ENTRE ASPAS pela URL do Apps Script (termina em /exec)
 const URL_PLANILHA = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
 
 /* ============ TEXTOS DA INTERFACE ============ */
@@ -109,6 +109,7 @@ const UI = {
     falta:"Faltam respostas. Os itens em vermelho precisam ser respondidos.",
     faltaAceite:"Marque o termo de consentimento para continuar.",
     erroRede:"Não foi possível enviar. Verifique a internet e tente novamente.",
+    erroUrl:"⚠️ Formulário ainda não conectado à planilha (URL_PLANILHA). Avise o pesquisador.",
     fimT:"✅ Obrigado por participar!", fimP:"Suas respostas foram enviadas. Você já pode fechar esta página.",
     rodape:"Pesquisa conduzida com ética e sigilo • Digital Chevalier Card",
     selecione:"Selecione..."
@@ -124,6 +125,7 @@ const UI = {
     falta:"Faltan respuestas. Los ítems en rojo deben ser respondidos.",
     faltaAceite:"Marque el consentimiento informado para continuar.",
     erroRede:"No fue posible enviar. Verifique su internet e inténtelo de nuevo.",
+    erroUrl:"⚠️ El formulario aún no está conectado a la planilla (URL_PLANILHA). Avise al investigador.",
     fimT:"✅ ¡Gracias por participar!", fimP:"Sus respuestas fueron enviadas. Ya puede cerrar esta página.",
     rodape:"Investigación realizada con ética y confidencialidad • Digital Chevalier Card",
     selecione:"Seleccione..."
@@ -131,191 +133,4 @@ const UI = {
 };
 
 /* ============ DADOS GERAIS (valor salvo sempre em português) ============ */
-const CAMPOS = [
-  {k:"papel", pt:"Você é", es:"Usted es", op:[["Mãe","Madre"],["Pai","Padre"],["Outro responsável","Otro tutor"]]},
-  {k:"faixa", pt:"Sua faixa etária", es:"Su rango de edad", op:[["18–24","18–24"],["25–34","25–34"],["35–44","35–44"],["45–54","45–54"],["55 ou mais","55 o más"]]},
-  {k:"escolaridade", pt:"Sua escolaridade", es:"Su nivel de estudios", op:[["Fundamental incompleto","Primaria incompleta"],["Fundamental completo","Primaria completa"],["Médio completo","Secundaria completa"],["Superior incompleto","Superior incompleto"],["Superior completo","Superior completo"],["Pós-graduação","Posgrado"]]},
-  {k:"pais", pt:"País onde você mora", es:"País donde vive", op:[["Brasil","Brasil"],["Argentina","Argentina"],["Chile","Chile"],["Colômbia","Colombia"],["México","México"],["Paraguai","Paraguay"],["Peru","Perú"],["Uruguai","Uruguay"],["Outro","Otro"]]},
-  {k:"idadeCrianca", pt:"Idade da criança", es:"Edad del niño(a)", op:[["5 anos","5 años"],["6 anos","6 años"],["7 anos","7 años"]]},
-  {k:"sexoCrianca", pt:"Sexo da criança", es:"Sexo del niño(a)", op:[["Feminino","Femenino"],["Masculino","Masculino"],["Prefiro não informar","Prefiero no informar"]]}
-];
-
-/* ============ ESCALAS ============ */
-const ESC = {
- ep:{
-  id:"c-ep",
-  pt:{t:"Parte 1 – Estresse parental", s:"Pensando na sua experiência como pai/mãe, indique o quanto você concorda com cada frase."},
-  es:{t:"Parte 1 – Estrés parental", s:"Pensando en su experiencia como padre/madre, indique cuánto está de acuerdo con cada frase."},
-  lab:{pt:["Discordo totalmente","Discordo","Indeciso / Neutro","Concordo","Concordo totalmente"],
-       es:["Totalmente en desacuerdo","En desacuerdo","Indeciso / Neutral","De acuerdo","Totalmente de acuerdo"]},
-  curto:{pt:["Discordo totalmente","Discordo","Neutro","Concordo","Concordo totalmente"],
-         es:["Totalm. en desacuerdo","En desacuerdo","Neutral","De acuerdo","Totalm. de acuerdo"]},
-  it:[
-   ["Eu estou feliz no meu papel como pai/mãe","Estoy feliz en mi papel como padre/madre"],
-   ["Cuidar do meu filho às vezes leva mais tempo e energia do que eu tenho para dar","Cuidar de mi hijo a veces requiere más tiempo y energía de los que tengo para dar"],
-   ["Eu sinto uma proximidade com meu(s) filho(s)","Siento cercanía con mi(s) hijo(s)"],
-   ["O nascimento de meu(s) filho(s) me deu mais certezas e rumo na vida","El nacimiento de mi(s) hijo(s) me dio más certezas y rumbo en la vida"],
-   ["Meu(s) filho(s) é(são) uma fonte importante de afeto para mim","Mi(s) hijo(s) es (son) una fuente importante de afecto para mí"],
-   ["Eu acho satisfatório gastar tempo com meu(s) filho(s)","Me resulta satisfactorio pasar tiempo con mi(s) hijo(s)"],
-   ["Minha vida é controlada pelas necessidades do(s) meu(s) filho(s)","Mi vida está controlada por las necesidades de mi(s) hijo(s)"],
-   ["Eu acho difícil equilibrar as responsabilidades com meu(s) filho(s) e as outras responsabilidades na minha vida","Me resulta difícil equilibrar las responsabilidades con mi(s) hijo(s) y las demás responsabilidades de mi vida"],
-   ["Sinto-me sobrecarregado(a) pelas responsabilidades de ser pai/mãe","Me siento sobrecargado(a) por las responsabilidades de ser padre/madre"],
-   ["Se eu pudesse fazer tudo de novo, eu não teria filhos","Si pudiera hacerlo todo de nuevo, no tendría hijos"],
-   ["Ter filho(s) me traz felicidade","Tener hijo(s) me trae felicidad"],
-   ["É difícil para mim conciliar a maternidade/paternidade com meus outros papéis e atividades","Me resulta difícil conciliar la maternidad/paternidad con mis otros roles y actividades"],
-   ["Cuidar do(s) meu(s) filho(s) consome a maior parte do meu tempo livre","Cuidar de mi(s) hijo(s) consume la mayor parte de mi tiempo libre"],
-   ["Sinto-me estressado(a) por causa das demandas do(s) meu(s) filho(s)","Me siento estresado(a) por las demandas de mi(s) hijo(s)"],
-   ["Eu me sinto realizado(a) como pai/mãe","Me siento realizado(a) como padre/madre"],
-   ["Desfruto de meu(s) filho(s)","Disfruto de mi(s) hijo(s)"]
-  ]},
- pp:{
-  id:"c-pp",
-  pt:{t:"Parte 2 – Práticas de criação", s:"Com que frequência você faz o que está descrito em cada frase com o seu filho(a)?"},
-  es:{t:"Parte 2 – Prácticas de crianza", s:"¿Con qué frecuencia hace usted lo que describe cada frase con su hijo(a)?"},
-  lab:{pt:["Nunca","Raramente","Às vezes","Frequentemente","Sempre"],es:["Nunca","Rara vez","A veces","Frecuentemente","Siempre"]},
-  it:[
-   ["Incentivo o meu filho quando ele está triste","Animo a mi hijo cuando está triste"],
-   ["Explico as razões das regras que estabeleço para o meu filho","Explico las razones de las reglas que establezco para mi hijo"],
-   ["Encorajo o meu filho a falar sobre os seus sentimentos","Animo a mi hijo a hablar sobre sus sentimientos"],
-   ["Demonstro simpatia e compreensão quando o meu filho está com problemas ou frustrado","Demuestro simpatía y comprensión cuando mi hijo tiene problemas o está frustrado"],
-   ["Ajudo o meu filho a entender as consequências das suas ações","Ayudo a mi hijo a entender las consecuencias de sus acciones"],
-   ["Respeito a opinião do meu filho, mesmo que não concorde com ela","Respeto la opinión de mi hijo, aunque no esté de acuerdo con ella"],
-   ["Demonstro afeto verbalmente (ex: digo que o amo)","Demuestro afecto verbalmente (ej.: le digo que lo amo)"],
-   ["Converso com o meu filho sobre o que se espera dele","Converso con mi hijo sobre lo que se espera de él"],
-   ["Dou oportunidade para o meu filho tomar decisões por si mesmo","Doy oportunidad a mi hijo de tomar decisiones por sí mismo"],
-   ["Elogio o meu filho quando ele se comporta bem","Elogio a mi hijo cuando se comporta bien"],
-   ["Explico ao meu filho como me sinto quando ele se comporta bem ou mal","Le explico a mi hijo cómo me siento cuando se comporta bien o mal"],
-   ["Escuto com atenção o que o meu filho tem a dizer","Escucho con atención lo que mi hijo tiene que decir"],
-   ["Tenho momentos calorosos e especiais com o meu filho","Tengo momentos cálidos y especiales con mi hijo"],
-   ["Levo em consideração as preferências do meu filho antes de pedir para fazer algo","Tomo en cuenta las preferencias de mi hijo antes de pedirle que haga algo"],
-   ["Permito que o meu filho participe nas decisões da família","Permito que mi hijo participe en las decisiones de la familia"],
-   ["Bato no meu filho quando ele desobedece","Le pego a mi hijo cuando desobedece"],
-   ["Grito com o meu filho quando ele faz algo errado","Le grito a mi hijo cuando hace algo mal"],
-   ["Mando o meu filho para o quarto ou para um canto como castigo","Mando a mi hijo a su cuarto o a un rincón como castigo"]
-  ]},
- re:{
-  id:"c-re",
-  pt:{t:"Parte 3 – Regulação emocional da criança", s:"Pensando em como a criança costuma se comportar, indique a frequência de cada situação."},
-  es:{t:"Parte 3 – Regulación emocional del niño(a)", s:"Pensando en cómo suele comportarse el niño(a), indique la frecuencia de cada situación."},
-  lab:{pt:["Nunca","Algumas vezes","Muitas vezes","Quase sempre"],es:["Nunca","Algunas veces","Muchas veces","Casi siempre"]},
-  it:[
-   ["É uma criança alegre","Es un niño(a) alegre"],
-   ["Apresenta grande variação de humor (o estado emocional da criança é difícil de ser previsto, pois ela muda rapidamente de bem humorada para mal humorada)","Presenta gran variación de humor (el estado emocional del niño es difícil de predecir, pues cambia rápidamente de buen humor a mal humor)"],
-   ["Responde de forma positiva a iniciativas de adultos de se aproximar de forma neutra ou amigável","Responde de forma positiva a las iniciativas de adultos de acercarse de forma neutra o amistosa"],
-   ["Troca bem de uma atividade para outra (não fica ansiosa, irritada, angustiada ou excessivamente empolgada quando passa de uma atividade para outra)","Cambia bien de una actividad a otra (no se pone ansioso, irritado, angustiado ni excesivamente exaltado al pasar de una actividad a otra)"],
-   ["Recupera-se rapidamente de episódios de aborrecimento ou angústia (por exemplo, não permanece quieta ou mal humorada, ansiosa ou triste após eventos emocionalmente estressantes)","Se recupera rápidamente de episodios de fastidio o angustia (por ejemplo, no permanece callado ni de mal humor, ansioso o triste después de eventos emocionalmente estresantes)"],
-   ["Frustra-se facilmente","Se frustra fácilmente"],
-   ["Responde de forma positiva a iniciativas de seus pares de se aproximar de forma neutra ou amigável (pares são crianças da mesma idade ou colegas)","Responde de forma positiva a las iniciativas de sus pares de acercarse de forma neutra o amistosa (los pares son niños de la misma edad o compañeros)"],
-   ["É propensa a explosões de raiva / birra","Es propenso(a) a explosiones de rabia / berrinches"],
-   ["É capaz de adiar gratificação (por exemplo, suporta a espera por uma recompensa)","Es capaz de postergar la gratificación (por ejemplo, tolera la espera por una recompensa)"],
-   ["Sente prazer com o sofrimento dos outros (por exemplo, ri quando outra pessoa se machuca ou é punida; gosta de provocar os outros)","Siente placer con el sufrimiento de los demás (por ejemplo, se ríe cuando otra persona se lastima o es castigada; le gusta provocar a otros)"],
-   ["Consegue controlar a empolgação em situações emocionalmente estimulantes (por exemplo, não se empolga excessivamente em situações de brincadeiras de alta energia, ou não fica muito agitada em contextos inapropriados)","Logra controlar la exaltación en situaciones emocionalmente estimulantes (por ejemplo, no se exalta excesivamente en juegos de alta energía, ni se agita demasiado en contextos inapropiados)"]
-  ]}
-};
-
-/* ============ ESTADO ============ */
-let lang = "pt";
-const resp = {};               // ex: resp.ep_3 = "4"; resp.papel = "Mãe"
-const $ = id => document.getElementById(id);
-
-function render(){
-  const u = UI[lang];
-  document.documentElement.lang = lang==="pt" ? "pt-BR" : "es";
-  document.title = u.titulo;
-  $("h-titulo").textContent = u.titulo; $("h-sub").textContent = u.sub;
-  $("t-tcle").textContent = u.tcle; $("tx-tcle").innerHTML = u.tx_tcle; $("tx-aceite").textContent = u.aceite;
-  $("t-dados").textContent = u.dados; $("s-dados").textContent = u.s_dados;
-  $("enviar").textContent = u.enviar; $("rodape").textContent = u.rodape;
-  $("b-pt").classList.toggle("on", lang==="pt"); $("b-es").classList.toggle("on", lang==="es");
-
-  // dados gerais
-  $("dados").innerHTML = "";
-  CAMPOS.forEach(c=>{
-    const d = document.createElement("div");
-    const opts = c.op.map(o=>`<option value="${o[0]}"${resp[c.k]===o[0]?" selected":""}>${lang==="pt"?o[0]:o[1]}</option>`).join("");
-    d.innerHTML = `<label class="t" for="f-${c.k}">${c[lang]}</label><select id="f-${c.k}" data-k="${c.k}"><option value="">${u.selecione}</option>${opts}</select>`;
-    $("dados").appendChild(d);
-  });
-  document.querySelectorAll("#dados select").forEach(s=>s.addEventListener("change",()=>{resp[s.dataset.k]=s.value;s.closest("div").classList.remove("falta");progresso();}));
-
-  // escalas
-  Object.keys(ESC).forEach(key=>{
-    const e = ESC[key], n = e.lab.pt.length;
-    const rotulos = (e.curto||e.lab)[lang];
-    let h = `<h2>${e[lang].t}</h2><p class="sub">${e[lang].s}</p>`;
-    h += `<div class="legenda">${e.lab[lang].map((x,i)=>`<span><b>${i+1}</b> = ${x}</span>`).join("")}</div>`;
-    e.it.forEach((it,i)=>{
-      const name = `${key}_${i+1}`;
-      h += `<div class="item" id="i-${name}"><p><b>${i+1}.</b>${it[lang==="pt"?0:1]}</p><div class="op" style="grid-template-columns:repeat(${n},1fr)">`;
-      for(let v=1; v<=n; v++){
-        h += `<label><input type="radio" name="${name}" value="${v}"${resp[name]==v?" checked":""}><strong>${v}</strong><span>${rotulos[v-1]}</span></label>`;
-      }
-      h += `</div></div>`;
-    });
-    $(e.id).innerHTML = h;
-  });
-  document.querySelectorAll('.op input').forEach(r=>r.addEventListener("change",()=>{
-    resp[r.name]=r.value; $("i-"+r.name).classList.remove("falta"); progresso();
-  }));
-  progresso();
-}
-
-function total(){
-  return CAMPOS.length + Object.values(ESC).reduce((a,e)=>a+e.it.length,0);
-}
-function progresso(){
-  let ok = CAMPOS.filter(c=>resp[c.k]).length;
-  Object.keys(ESC).forEach(k=>ESC[k].it.forEach((_,i)=>{ if(resp[`${k}_${i+1}`]) ok++; }));
-  $("prog").style.width = Math.round(ok/total()*100) + "%";
-}
-
-$("b-pt").onclick = ()=>{lang="pt";render();};
-$("b-es").onclick = ()=>{lang="es";render();};
-
-/* ============ ENVIO ============ */
-$("form").addEventListener("submit", async ev=>{
-  ev.preventDefault();
-  const u = UI[lang], msg = $("msg");
-  msg.className = ""; msg.style.display = "none";
-  if($("bot").value) return;                       // anti-robô
-  if(!$("aceite").checked){ msg.className="erro"; msg.textContent=u.faltaAceite; $("aceite").scrollIntoView({behavior:"smooth",block:"center"}); return; }
-
-  // validação
-  let primeiro = null;
-  CAMPOS.forEach(c=>{ if(!resp[c.k]){ const el=$("f-"+c.k).closest("div"); el.classList.add("falta"); primeiro = primeiro||el; } });
-  Object.keys(ESC).forEach(k=>ESC[k].it.forEach((_,i)=>{
-    if(!resp[`${k}_${i+1}`]){ const el=$(`i-${k}_${i+1}`); el.classList.add("falta"); primeiro = primeiro||el; }
-  }));
-  if(primeiro){ msg.className="erro"; msg.textContent=u.falta; primeiro.scrollIntoView({behavior:"smooth",block:"center"}); return; }
-
-  const arr = k => ESC[k].it.map((_,i)=>Number(resp[`${k}_${i+1}`]));
-  const dados = {
-    idioma: lang==="pt" ? "Português" : "Español",
-    papel: resp.papel, faixa: resp.faixa, escolaridade: resp.escolaridade, pais: resp.pais,
-    idadeCrianca: resp.idadeCrianca, sexoCrianca: resp.sexoCrianca,
-    ep: arr("ep"), pp: arr("pp"), re: arr("re")
-  };
-
-  const btn = $("enviar"); btn.disabled = true; btn.textContent = u.enviando;
-  try{
-    await fetch(URL_PLANILHA, {
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify(dados)
-    });
-    $("form").style.display = "none";
-    document.querySelector(".card").style.display = "none";
-    $("fim").style.display = "block";
-    $("fim").innerHTML = `<h2>${u.fimT}</h2><p>${u.fimP}</p>`;
-    $("prog").style.width = "100%";
-    window.scrollTo({top:0,behavior:"smooth"});
-  }catch(err){
-    msg.className = "erro"; msg.textContent = u.erroRede;
-    btn.disabled = false; btn.textContent = u.enviar;
-  }
-});
-
-render();
-</script>
-</body>
-</html>
+const
